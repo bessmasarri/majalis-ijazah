@@ -16,25 +16,76 @@
 </head>
 
 <body class="bg-amber-50 text-gray-800 min-h-screen flex flex-col">
-    <nav class="bg-emerald-700 text-white shadow-lg">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold">مجالس الإجازة</a>
-            <div class="space-x-reverse space-x-4 flex items-center">
-                <a href="/" class="hover:text-amber-200">الرئيسية</a>
+    <nav class="bg-emerald-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <!-- Logo -->
+                <a href="/" class="text-2xl font-bold flex items-center gap-2">
+                    <span class="text-3xl">🕌</span>
+                    مجالس الإجازة
+                </a>
 
-                <% if (user) { %>
-                    <a href="/dashboard" class="hover:text-amber-200">لوحة التحكم</a>
-                    <a href="/create-session"
-                        class="bg-amber-400 text-emerald-900 px-3 py-1 rounded-full font-bold text-sm hover:bg-amber-300 transition">مجلس
-                        جديد</a>
-                    <a href="/logout" class="hover:text-amber-200 text-sm">خروج</a>
-                    <% } else { %>
-                        <a href="/login" class="hover:text-amber-200">دخول</a>
-                        <a href="/signup"
-                            class="bg-white text-emerald-700 px-4 py-1 rounded-full font-bold text-sm hover:bg-gray-100 transition">حساب
-                            جديد</a>
-                        <% } %>
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-reverse space-x-6">
+                    <a href="/" class="hover:text-amber-200 transition">الرئيسية</a>
+
+                    <% if (user) { %>
+                        <a href="/dashboard" class="hover:text-amber-200 transition">لوحة التحكم</a>
+                        <a href="/create-session"
+                            class="bg-amber-400 text-emerald-900 px-4 py-2 rounded-full font-bold text-sm hover:bg-amber-300 transition shadow-md">
+                            + مجلس جديد
+                        </a>
+                        <a href="/logout" class="text-sm hover:text-red-200 transition">خروج</a>
+                        <% } else { %>
+                            <a href="/login" class="hover:text-amber-200 transition">دخول</a>
+                            <a href="/signup"
+                                class="bg-white text-emerald-700 px-5 py-2 rounded-full font-bold text-sm hover:bg-gray-100 transition shadow-md">
+                                حساب جديد
+                            </a>
+                            <% } %>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden focus:outline-none">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4 border-t border-emerald-600">
+                <div class="flex flex-col space-y-3 mt-4">
+                    <a href="/" class="block hover:bg-emerald-800 px-3 py-2 rounded transition">الرئيسية</a>
+                    <% if (user) { %>
+                        <a href="/dashboard" class="block hover:bg-emerald-800 px-3 py-2 rounded transition">لوحة
+                            التحكم</a>
+                        <a href="/create-session"
+                            class="block bg-amber-400 text-emerald-900 px-3 py-2 rounded font-bold text-center">
+                            + مجلس جديد
+                        </a>
+                        <a href="/logout" class="block hover:bg-red-800 px-3 py-2 rounded transition text-red-200">تسجيل
+                            الخروج</a>
+                        <% } else { %>
+                            <a href="/login" class="block hover:bg-emerald-800 px-3 py-2 rounded transition">تسجيل
+                                الدخول</a>
+                            <a href="/signup"
+                                class="block bg-white text-emerald-700 px-3 py-2 rounded font-bold text-center">
+                                إنشاء حساب جديد
+                            </a>
+                            <% } %>
+                </div>
             </div>
         </div>
     </nav>
+
+    <script>
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+    </script>
     <main class="container mx-auto px-4 py-8 flex-grow">
