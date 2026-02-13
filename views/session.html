@@ -28,16 +28,6 @@
             <% if (isActive) { %>
                 <div class="bg-white p-6 rounded-xl shadow-md border-amber-200 border-2 text-center">
                     <h3 class="text-lg font-bold text-amber-800 mb-4">رمز تسجيل الحضور</h3>
-                    <div id="qrcode" class="flex justify-center mb-4"></div>
-                    <!-- Client-side QR generation for simplicity in view, or we can use the server one passed in. 
-                 Let's use a client script to generate it on the fly or just an img tag to a route? 
-                 Actually, simple client JS is fine or better, use the API to get it?
-                 Wait, I can just use a library here or an image text.
-                 Let's use an img tag pointing to an API that returns the QR, or simpler: 
-                 Just use the frontend qrcode.js IF i had it. 
-                 But I have 'qrcode' package on backend. I should pass the Data URL from backend.
-                 I'll update the route to pass 'qrCodeDataUrl'. 
-            -->
                     <img src="<%= qrCodeDataUrl %>" alt="Session QR Code" class="mx-auto w-48 h-48">
                     <p class="text-sm text-gray-500 mt-2">امسح الرمز لتسجيل الحضور</p>
                     <a href="/register/<%= session.id %>" class="block mt-2 text-emerald-600 underline text-sm"
@@ -49,17 +39,19 @@
                     </div>
                     <% } %>
 
-                        <div class="bg-white p-6 rounded-xl shadow-md border border-emerald-100">
-                            <h3 class="text-lg font-bold text-emerald-800 mb-4">إصدار الإجازات</h3>
-                            <form action="/api/certificates/generate" method="POST">
-                                <input type="hidden" name="session_id" value="<%= session.id %>">
-                                <button type="submit"
-                                    class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-lg transition shadow">
-                                    🖨️ إصدار الإجازات (PDF)
-                                </button>
-                            </form>
-                            <p class="text-xs text-gray-500 mt-2 text-center">سيتم إنشاء ملفات PDF للحضور.</p>
-                        </div>
+                        <% if (isOwner) { %>
+                            <div class="bg-white p-6 rounded-xl shadow-md border border-emerald-100">
+                                <h3 class="text-lg font-bold text-emerald-800 mb-4">إصدار الإجازات</h3>
+                                <form action="/api/certificates/generate" method="POST">
+                                    <input type="hidden" name="session_id" value="<%= session.id %>">
+                                    <button type="submit"
+                                        class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-lg transition shadow">
+                                        🖨️ إصدار الإجازات (PDF)
+                                    </button>
+                                </form>
+                                <p class="text-xs text-gray-500 mt-2 text-center">سيتم إنشاء ملفات PDF للحضور.</p>
+                            </div>
+                            <% } %>
         </div>
 
         <!-- Attendees List -->
@@ -102,4 +94,4 @@
         </div>
     </div>
 
-    <%- include('partials/footer') %>
+    <%- include('partials/footer.html') %>

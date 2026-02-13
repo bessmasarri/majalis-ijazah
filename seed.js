@@ -1,25 +1,35 @@
 const db = require('./database');
 const moment = require('moment');
+const bcrypt = require('bcryptjs');
 
 const today = moment().format('YYYY-MM-DD');
-const startTime = moment().subtract(1, 'hour').format('HH:mm'); // Started 1 hour ago
-const endTime = moment().add(2, 'hours').format('HH:mm'); // Ends in 2 hours
+const startTime = moment().subtract(1, 'hour').format('HH:mm');
+const endTime = moment().add(4, 'hours').format('HH:mm');
 
-const sql = `INSERT INTO sessions (title, sheikh_name, date, start_time, end_time, description) VALUES (?, ?, ?, ?, ?, ?)`;
+const seedData = async () => {
+    const hashedPassword = await bcrypt.hash('123456', 10);
 
-db.serialize(() => {
-    db.run(sql, [
-        "شرح الأربعين النووية - المجلس الأول",
-        "الشيخ محمد بن صالح",
-        today,
-        startTime,
-        endTime,
-        "مجلس لشرح الأحاديث الخمسة الأولى من الأربعين النووية."
-    ], function (err) {
-        if (err) {
-            console.error(err.message);
-        } else {
-            console.log(`Seeded session with ID: ${this.lastID}`);
-        }
+    db.serialize(() => {
+        // Create User
+        db.run(`INSERT INTO users (name, email, password) VALUES (?, ?, ?)`,
+            ["الشيخ محمد", "sheikh@example.com", hashedPassword],
+            function (err) {
+                if (err) return console.error(err);
+
+                const userId = this.lastID;
+                console.log(`Created User ID: ${userId} (Email: sheikh@example.com, Pass: 123456)`);
+
+                // Create Session
+                db.run(`INSERT INTO sessions (user_id, title, sheikh_name, date, start_time, end_time, description) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                    [userId, "مجلس شرح الأربعين النووية", "الشيخ محمد", today, startTime, endTime, "تجربة مجلس علمي."],
+                    function (err) {
+                        if (err) console.error(err);
+                        else console.log(`Created Session ID: ${this.lastID}`);
+                    }
+                );
+            }
+        );
     });
-});
+};
+
+seedData();
