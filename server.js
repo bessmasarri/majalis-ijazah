@@ -50,7 +50,7 @@ app.post('/api/sessions', (req, res) => {
     const sql = `INSERT INTO sessions (title, sheikh_name, date, start_time, end_time, description) VALUES (?, ?, ?, ?, ?, ?)`;
     db.run(sql, [title, sheikh_name, date, start_time, end_time, description], function (err) {
         if (err) return console.error(err.message);
-        res.redirect('/');
+        res.redirect(`/session/${this.lastID}`);
     });
 });
 
