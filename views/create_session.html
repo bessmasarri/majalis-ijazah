@@ -1,0 +1,54 @@
+<%- include('partials/header.html') %>
+
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-emerald-100">
+        <h2 class="text-2xl font-bold text-emerald-800 mb-6 text-center">إنشاء مجلس جديد</h2>
+
+        <form action="/api/sessions" method="POST" class="space-y-6">
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">عنوان المجلس</label>
+                <input type="text" name="title" required
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50"
+                    placeholder="مثال: شرح كتاب التوحيد">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">اسم الشيخ</label>
+                <input type="text" name="sheikh_name" required
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">التاريخ</label>
+                    <input type="date" name="date" required
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">وقت البدء</label>
+                    <input type="time" name="start_time" required
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">وقت الانتهاء</label>
+                    <input type="time" name="end_time" required
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">وصف (اختياري)</label>
+                <textarea name="description" rows="3"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50"></textarea>
+            </div>
+
+            <button type="submit"
+                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow transition">
+                حفظ المجلس
+            </button>
+        </form>
+    </div>
+
+    <%- include('partials/footer') %>

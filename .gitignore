@@ -1,0 +1,6 @@
+node_modules/
+database.sqlite
+certificates/*.pdf
+.env
+.DS_Store
+Thumbs.db

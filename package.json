@@ -1,0 +1,21 @@
+{
+  "name": "majalis-ijazah",
+  "version": "1.0.0",
+  "description": "Simple open-source Node.js web app for Islamic knowledge sessions and Ijazah certificates.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "ejs": "^4.0.1",
+    "express": "^4.18.2",
+    "moment": "^2.29.4",
+    "pdfkit": "^0.13.0",
+    "qrcode": "^1.5.3",
+    "sqlite3": "^5.1.6"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

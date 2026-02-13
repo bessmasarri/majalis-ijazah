@@ -1,0 +1,43 @@
+<%- include('partials/header.html') %>
+
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-emerald-800">المجالس العلمية</h1>
+        <a href="/create-session"
+            class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg shadow transition">
+            + إنشاء مجلس جديد
+        </a>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <% if (sessions.length===0) { %>
+            <p class="col-span-full text-center text-gray-500 text-lg">لا توجد مجالس حالياً. قم بإنشاء مجلس جديد.</p>
+            <% } %>
+
+                <% sessions.forEach(session=> { %>
+                    <div
+                        class="bg-white rounded-xl shadow-md overflow-hidden border border-emerald-100 hover:shadow-lg transition">
+                        <div class="p-6">
+                            <h2 class="text-xl font-bold text-emerald-900 mb-2">
+                                <%= session.title %>
+                            </h2>
+                            <p class="text-gray-600 mb-4"><span class="font-semibold">الشيخ:</span>
+                                <%= session.sheikh_name %>
+                            </p>
+
+                            <div class="flex justify-between text-sm text-gray-500 mb-4">
+                                <span>📅 <%= session.date %></span>
+                                <span>⏰ <%= session.start_time %> - <%= session.end_time %></span>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <a href="/session/<%= session.id %>"
+                                    class="flex-1 bg-amber-100 hover:bg-amber-200 text-amber-900 text-center py-2 rounded-lg transition">
+                                    إدارة المجلس
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+    </div>
+
+    <%- include('partials/footer.html') %>

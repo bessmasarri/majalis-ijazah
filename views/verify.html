@@ -1,0 +1,35 @@
+<%- include('partials/header.html') %>
+
+    <div
+        class="max-w-xl mx-auto mt-12 bg-white p-8 rounded-xl shadow-2xl border-4 border-double border-emerald-200 text-center">
+        <% if (valid) { %>
+            <div class="text-6xl mb-4">📜</div>
+            <h2 class="text-3xl font-bold text-emerald-800 mb-4">إجازة صحيحة</h2>
+            <div class="bg-emerald-50 p-6 rounded-lg border border-emerald-100 space-y-3">
+                <p class="text-gray-500 text-sm">معرف الشهادة: <span class="font-mono text-xs">
+                        <%= certificate.id %>
+                    </span></p>
+                <h3 class="text-2xl font-bold text-amber-700">
+                    <%= certificate.student_name %>
+                </h3>
+                <p class="text-lg text-gray-700">حضر مجلس: <strong>
+                        <%= certificate.session_title %>
+                    </strong></p>
+                <p class="text-gray-600">للشيخ: <%= certificate.sheikh_name %>
+                </p>
+                <p class="text-gray-500 text-sm">التاريخ: <%= certificate.date %>
+                </p>
+            </div>
+            <div class="mt-6">
+                <span class="inline-block bg-green-600 text-white px-4 py-1 rounded-full text-sm font-bold shadow">
+                    ✅ موثقة في النظام
+                </span>
+            </div>
+            <% } else { %>
+                <div class="text-6xl mb-4">❌</div>
+                <h2 class="text-3xl font-bold text-red-800 mb-4">إجازة غير صالحة</h2>
+                <p class="text-gray-600">لم يتم العثور على شهادة بهذا الرقم في النظام.</p>
+                <% } %>
+    </div>
+
+    <%- include('partials/footer') %>
