@@ -8,16 +8,18 @@ A simple, open-source Node.js web application for managing Islamic knowledge ses
 
 ## Features
 
+-   **Authentication System**: Secure Login/Signup for Sheikhs and Professors to manage their own sessions.
 -   **Session Management**: Create scientific sessions (Majalis) with Sheikh name, date, and time.
+-   **Mobile Optimized**: Fully responsive design with a mobile-friendly dashboard and registration flow.
 -   **QR Code Registration**: Attendees scan a QR code to register (only active during session time).
 -   **Digital Certificates**: Auto-generate PDF certificates for all attendees with one click.
 -   **Verification System**: Verify certificate authenticity via QR code scan.
 -   **Islamic Design**: Clean UI with green/beige accents and Arabic typography (Amiri font).
--   **Privacy Focused**: No user accounts required, database stored locally.
 
 ## Tech Stack
 
 -   **Backend**: Node.js, Express.js
+-   **Authentication**: bcryptjs, express-session
 -   **Database**: SQLite (local file, no setup needed)
 -   **Frontend**: HTML, EJS, TailwindCSS (CDN)
 -   **PDF Generation**: PDFKit
@@ -27,7 +29,7 @@ A simple, open-source Node.js web application for managing Islamic knowledge ses
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/yourusername/majalis-ijazah.git
+    git clone https://github.com/bessmasarri/majalis-ijazah.git
     cd majalis-ijazah
     ```
 
@@ -45,28 +47,37 @@ A simple, open-source Node.js web application for managing Islamic knowledge ses
 ## Quick Start / Testing
 
 1.  **Seed Data**:
-    Run `node seed.js` to create a test session that is currently active (starts 1 hour ago, ends in 2 hours).
+    Run `node seed.js` to create a test user and session.
+    -   **Default Admin Email**: `sheikh@example.com`
+    -   **Default Password**: `123456`
 
-2.  **Access Admin Dashboard**:
-    Go to `http://localhost:3000` to see the session list.
+2.  **Access the Platform**:
+    Go to `http://localhost:3000`. You will see the Landing Page.
 
-3.  **Register as an Attendee**:
-    -   Click "إدارة المجلس" (Manage Session).
-    -   Scan the QR code or click the "رابط مباشر" (Direct Link).
-    -   Enter your name and register.
+3.  **Login**:
+    Click "دخول" (Login) and use the default credentials above.
 
-4.  **Generate Certificates**:
-    -   In the session page, click "إصدار الإجازات" (Generate Certificates).
-    -   Check the `/certificates` folder in the project directory for the generated PDFs.
+4.  **Create a Session**:
+    Go to your **Dashboard** (لوحة التحكم) and click "إلشاء مجلس جديد" (Create Session).
 
-## Deployment (Render.com)
+5.  **Attendee Registration**:
+    -   Open the session page.
+    -   Scan the QR code or use the direct link (open in Incognito/Private window to simulate a student).
+    -   Register a name.
+
+6.  **Generate Certificates**:
+    -   Back in the Admin Dashboard, inside the session page, click "إصدار الإجازات" (Generate Certificates).
+    -   PDFs are saved in the `/certificates` folder.
+
+## Deployment
 
 1.  Push code to GitHub.
-2.  Create a new **Web Service** on Render.
-3.  Connect your repository.
-4.  Set **Build Command**: `npm install`
-5.  Set **Start Command**: `node server.js`
-6.  Add Environment Variable (Optional): `BASE_URL` = `https://your-app-name.onrender.com`
+2.  Deploy to **Render** or **Railway** as a Node.js Web Service.
+3.  **Build Command**: `npm install`
+4.  **Start Command**: `node server.js`
+5.  **Environment Variables**:
+    -   `BASE_URL`: Set to your production URL (e.g., `https://myapp.onrender.com`)
+    -   `SESSION_SECRET`: Set a strong random string.
 
 ---
 *License: ISC (Open Source)*
