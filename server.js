@@ -5,10 +5,13 @@ const db = require('./database');
 const moment = require('moment');
 const generateQR = require('./utils/qr');
 const generateCertificate = require('./utils/pdf');
+const { generateSampleDocx, fillTemplate } = require('./utils/word');
+const { sendIjazahEmail } = require('./utils/email');
 const crypto = require('crypto');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,12 +23,38 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/certificates', express.static(path.join(__dirname, 'certificates')));
 
+// Multer Setup for File Uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join(__dirname, 'public/uploads');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/msword' ||
+            file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            cb(null, true);
+        } else {
+            cb(new Error('Only .doc and .docx files are allowed!'), false);
+        }
+    }
+});
+
 // Session Setup
 app.use(session({
-    secret: 'secret-key-change-this-in-prod', // In production use a strong env var
+    secret: 'secret-key-change-this-in-prod',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+    cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
 // View Engine Setup
@@ -39,7 +68,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// Ensure certificates directory exists
 if (!fs.existsSync(path.join(__dirname, 'certificates'))) {
     fs.mkdirSync(path.join(__dirname, 'certificates'));
 }
@@ -54,10 +82,7 @@ const isAuthenticated = (req, res, next) => {
 
 // --- Routes ---
 
-// Home - Public Landing Page
 app.get('/', (req, res) => {
-    // Only show recent public sessions or just a landing page?
-    // Let's show recent sessions to everyone
     const sql = `SELECT * FROM sessions ORDER BY date DESC, start_time DESC LIMIT 6`;
     db.all(sql, [], (err, rows) => {
         if (err) return console.error(err.message);
@@ -66,45 +91,28 @@ app.get('/', (req, res) => {
 });
 
 // --- Auth Routes ---
-
-app.get('/signup', (req, res) => {
-    res.render('signup', { error: null });
-});
+app.get('/signup', (req, res) => { res.render('signup', { error: null }); });
 
 app.post('/signup', async (req, res) => {
     const { name, email, password } = req.body;
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
         const sql = `INSERT INTO users (name, email, password) VALUES (?, ?, ?)`;
-
         db.run(sql, [name, email, hashedPassword], function (err) {
-            if (err) {
-                console.error(err.message);
-                return res.render('signup', { error: "البريد الإلكتروني مسجل بالفعل." });
-            }
-            // Auto login
+            if (err) return res.render('signup', { error: "البريد الإلكتروني مسجل بالفعل." });
             req.session.user = { id: this.lastID, name: name, email: email };
             res.redirect('/dashboard');
         });
-    } catch (e) {
-        console.error(e);
-        res.render('signup', { error: "حدث خطأ أثناء التسجيل." });
-    }
+    } catch (e) { res.render('signup', { error: "حدث خطأ أثناء التسجيل." }); }
 });
 
-app.get('/login', (req, res) => {
-    res.render('login', { error: null });
-});
+app.get('/login', (req, res) => { res.render('login', { error: null }); });
 
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
     const sql = `SELECT * FROM users WHERE email = ?`;
-
     db.get(sql, [email], async (err, user) => {
-        if (err || !user) {
-            return res.render('login', { error: "البريد الإلكتروني أو كلمة المرور غير صحيحة." });
-        }
-
+        if (err || !user) return res.render('login', { error: "البريد الإلكتروني أو كلمة المرور غير صحيحة." });
         const match = await bcrypt.compare(password, user.password);
         if (match) {
             req.session.user = { id: user.id, name: user.name, email: user.email };
@@ -115,10 +123,7 @@ app.post('/login', (req, res) => {
     });
 });
 
-app.get('/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/');
-});
+app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
 app.get('/dashboard', isAuthenticated, (req, res) => {
     const sql = `SELECT * FROM sessions WHERE user_id = ? ORDER BY date DESC, start_time DESC`;
@@ -129,27 +134,84 @@ app.get('/dashboard', isAuthenticated, (req, res) => {
 });
 
 // --- protected Session Routes ---
+app.get('/create-session', isAuthenticated, (req, res) => { res.render('create_session'); });
 
-// Create Session Page
-app.get('/create-session', isAuthenticated, (req, res) => {
-    res.render('create_session');
-});
-
-// Create Session Logic
-app.post('/api/sessions', isAuthenticated, (req, res) => {
+app.post('/api/sessions', isAuthenticated, upload.single('ijazah_file'), (req, res) => {
     const { title, sheikh_name, date, start_time, end_time, description } = req.body;
     const user_id = req.session.user.id;
+    const ijazah_file = req.file ? req.file.filename : null;
 
-    const sql = `INSERT INTO sessions (user_id, title, sheikh_name, date, start_time, end_time, description) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-    db.run(sql, [user_id, title, sheikh_name, date, start_time, end_time, description], function (err) {
+    const sql = `INSERT INTO sessions (user_id, title, sheikh_name, date, start_time, end_time, description, ijazah_file) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    db.run(sql, [user_id, title, sheikh_name, date, start_time, end_time, description, ijazah_file], function (err) {
         if (err) return console.error(err.message);
         res.redirect(`/session/${this.lastID}`);
     });
 });
 
-// View Session (Public or Private details?)
-// Session page acts as "Manage" for admin and "View Info" for public.
-// We need to hide "Manage" buttons if not the owner.
+app.post('/api/sessions/delete/:id', isAuthenticated, (req, res) => {
+    const sessionId = req.params.id;
+    const userId = req.session.user.id;
+    db.get(`SELECT * FROM sessions WHERE id = ?`, [sessionId], (err, session) => {
+        if (err || !session || session.user_id !== userId) return res.status(403).send("Unauthorized");
+        if (session.ijazah_file) {
+            const filePath = path.join(__dirname, 'public/uploads', session.ijazah_file);
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        }
+        db.run(`DELETE FROM sessions WHERE id = ?`, [sessionId], (err) => {
+            res.redirect('/dashboard');
+        });
+    });
+});
+
+app.get('/session/edit/:id', isAuthenticated, (req, res) => {
+    const sessionId = req.params.id;
+    const userId = req.session.user.id;
+    db.get(`SELECT * FROM sessions WHERE id = ?`, [sessionId], (err, session) => {
+        if (err || !session || session.user_id !== userId) return res.redirect('/dashboard');
+        res.render('edit_session', { session });
+    });
+});
+
+app.post('/api/sessions/update/:id', isAuthenticated, upload.single('ijazah_file'), (req, res) => {
+    const sessionId = req.params.id;
+    const userId = req.session.user.id;
+    const { title, sheikh_name, date, start_time, end_time, description } = req.body;
+
+    db.get(`SELECT * FROM sessions WHERE id = ?`, [sessionId], (err, session) => {
+        if (err || !session) return res.status(404).send("Session not found");
+        if (session.user_id !== userId) return res.status(403).send("Unauthorized");
+
+        let ijazah_file = session.ijazah_file;
+        if (req.file) {
+            if (ijazah_file) {
+                const oldPath = path.join(__dirname, 'public/uploads', ijazah_file);
+                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+            }
+            ijazah_file = req.file.filename;
+        }
+
+        const sql = `UPDATE sessions SET title = ?, sheikh_name = ?, date = ?, start_time = ?, end_time = ?, description = ?, ijazah_file = ? WHERE id = ?`;
+        db.run(sql, [title, sheikh_name, date, start_time, end_time, description, ijazah_file, sessionId], function (err) {
+            if (err) return console.error(err.message);
+            res.redirect(`/session/${sessionId}`);
+        });
+    });
+});
+
+// --- Template Routes ---
+app.get('/api/template/sample', (req, res) => {
+    const outputPath = path.join(__dirname, 'public/uploads', 'sample_ijazah.docx');
+    const uploadDir = path.join(__dirname, 'public/uploads');
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+    generateSampleDocx(outputPath).then(() => {
+        res.download(outputPath, 'نموذج_إجازة.docx');
+    }).catch(err => {
+        console.error(err);
+        res.status(500).send("Error generating sample");
+    });
+});
+
 app.get('/session/:id', (req, res) => {
     const sessionId = req.params.id;
     const sqlSession = `SELECT * FROM sessions WHERE id = ?`;
@@ -176,103 +238,105 @@ app.get('/session/:id', (req, res) => {
     });
 });
 
-// --- Public Routes ---
-
-// Registration Page (GET)
 app.get('/register/:id', (req, res) => {
     const sessionId = req.params.id;
-    const sqlSession = `SELECT * FROM sessions WHERE id = ?`;
-
-    db.get(sqlSession, [sessionId], (err, session) => {
+    db.get(`SELECT * FROM sessions WHERE id = ?`, [sessionId], (err, session) => {
         if (err || !session) return res.status(404).send("Session not found");
-
         const now = moment();
         const sessionStart = moment(`${session.date} ${session.start_time}`, 'YYYY-MM-DD HH:mm');
         const sessionEnd = moment(`${session.date} ${session.end_time}`, 'YYYY-MM-DD HH:mm');
 
         let hideForm = false;
         let error = null;
-
         if (!now.isBetween(sessionStart, sessionEnd)) {
             hideForm = true;
             error = "عذراً، انتهت فترة تسجيل الحضور لهذا المجلس.";
         }
-
         res.render('register', { session, hideForm, error, success: false });
     });
 });
 
-// Handle Registration (POST)
 app.post('/api/register', (req, res) => {
-    const { session_id, name } = req.body;
-
-    // Validate Time Again
-    const sqlSession = `SELECT * FROM sessions WHERE id = ?`;
-    db.get(sqlSession, [session_id], (err, session) => {
+    const { session_id, name, email } = req.body;
+    db.get(`SELECT * FROM sessions WHERE id = ?`, [session_id], (err, session) => {
         if (err || !session) return res.status(404).send("Session not found");
-
         const now = moment();
         const sessionStart = moment(`${session.date} ${session.start_time}`, 'YYYY-MM-DD HH:mm');
         const sessionEnd = moment(`${session.date} ${session.end_time}`, 'YYYY-MM-DD HH:mm');
+        if (!now.isBetween(sessionStart, sessionEnd)) return res.render('register', { session, hideForm: true, error: "عذراً، انتهى وقت التسجيل.", success: false });
 
-        if (!now.isBetween(sessionStart, sessionEnd)) {
-            return res.render('register', { session, hideForm: true, error: "عذراً، انتهى وقت التسجيل.", success: false });
-        }
-
-        const sqlInsert = `INSERT INTO attendees (session_id, name) VALUES (?, ?)`;
-        db.run(sqlInsert, [session_id, name], function (err) {
-            if (err) return console.error(err.message);
+        db.run(`INSERT INTO attendees (session_id, name, email) VALUES (?, ?, ?)`, [session_id, name, email], function (err) {
             res.render('register', { session, hideForm: true, error: null, success: true });
         });
     });
 });
 
-// Generate Certificates (Admin Only - Protected)
+// Manual Add Attendee
+app.post('/api/attendees/add', isAuthenticated, (req, res) => {
+    const { session_id, name, email } = req.body;
+    const user_id = req.session.user.id;
+
+    db.get(`SELECT * FROM sessions WHERE id = ?`, [session_id], (err, session) => {
+        if (err || !session) return res.status(404).send("Session not found");
+        if (session.user_id !== user_id) return res.status(403).send("Unauthorized");
+
+        db.run(`INSERT INTO attendees (session_id, name, email) VALUES (?, ?, ?)`, [session_id, name, email], function (err) {
+            res.redirect(`/session/${session_id}`);
+        });
+    });
+});
+
 app.post('/api/certificates/generate', isAuthenticated, (req, res) => {
     const { session_id } = req.body;
-    const sqlSession = `SELECT * FROM sessions WHERE id = ?`;
-
-    db.get(sqlSession, [session_id], (err, session) => {
+    db.get(`SELECT * FROM sessions WHERE id = ?`, [session_id], (err, session) => {
         if (err || !session) return res.status(404).send("Session not found");
+        if (session.user_id !== req.session.user.id) return res.status(403).send("Unauthorized");
 
-        // Ensure user owns this session
-        if (session.user_id !== req.session.user.id) {
-            return res.status(403).send("Unauthorized");
-        }
-
-        const sqlAttendees = `SELECT * FROM attendees WHERE session_id = ?`;
-        db.all(sqlAttendees, [session_id], async (err, attendees) => {
+        db.all(`SELECT * FROM attendees WHERE session_id = ?`, [session_id], async (err, attendees) => {
             if (err) return console.error(err.message);
 
             for (const attendee of attendees) {
                 const checkCert = `SELECT id FROM certificates WHERE session_id = ? AND attendee_id = ?`;
-
                 await new Promise((resolve) => {
                     db.get(checkCert, [session_id, attendee.id], async (err, row) => {
-                        let certId;
-                        if (row) {
-                            certId = row.id;
+                        let certId = row ? row.id : crypto.randomBytes(8).toString('hex');
+                        if (!row) {
+                            db.run(`INSERT INTO certificates (id, session_id, attendee_id) VALUES (?, ?, ?)`, [certId, session_id, attendee.id]);
+                        }
+
+                        let outputPath;
+                        if (session.ijazah_file) {
+                            // --- Word Generator ---
+                            const templatePath = path.join(__dirname, 'public/uploads', session.ijazah_file);
+                            const fileName = `cert_${certId}.docx`;
+                            outputPath = path.join(__dirname, 'certificates', fileName);
+
+                            if (fs.existsSync(templatePath)) {
+                                const data = {
+                                    name: attendee.name,
+                                    date: session.date,
+                                    title: session.title,
+                                    sheikh_name: session.sheikh_name,
+                                    'أسم': attendee.name
+                                };
+                                try {
+                                    fillTemplate(templatePath, outputPath, data);
+                                } catch (e) { console.error("Word Generation Error", e); }
+                            }
                         } else {
-                            certId = crypto.randomBytes(8).toString('hex');
-                            db.run(`INSERT INTO certificates (id, session_id, attendee_id) VALUES (?, ?, ?)`,
-                                [certId, session_id, attendee.id]);
+                            // --- PDF Fallback ---
+                            const fileName = `cert_${certId}.pdf`;
+                            outputPath = path.join(__dirname, 'certificates', fileName);
+                            try {
+                                await generateCertificate(attendee.name, session.title, session.sheikh_name, session.date, certId, outputPath);
+                            } catch (e) { console.error("PDF Generation Error", e); }
                         }
 
-                        const fileName = `cert_${certId}.pdf`;
-                        const outputPath = path.join(__dirname, 'certificates', fileName);
-
-                        try {
-                            await generateCertificate(
-                                attendee.name,
-                                session.title,
-                                session.sheikh_name,
-                                session.date,
-                                certId,
-                                outputPath
-                            );
-                        } catch (e) {
-                            console.error(`Error generating PDF for ${attendee.name}:`, e);
+                        // Send Email if exists
+                        if (attendee.email && outputPath && fs.existsSync(outputPath)) {
+                            await sendIjazahEmail(attendee.email, attendee.name, session.title, outputPath);
                         }
+
                         resolve();
                     });
                 });
@@ -282,7 +346,6 @@ app.post('/api/certificates/generate', isAuthenticated, (req, res) => {
     });
 });
 
-// Verify Certificate
 app.get('/verify/:id', (req, res) => {
     const certId = req.params.id;
     const sql = `
@@ -292,10 +355,7 @@ app.get('/verify/:id', (req, res) => {
         JOIN attendees a ON c.attendee_id = a.id
         WHERE c.id = ?
     `;
-
     db.get(sql, [certId], (err, row) => {
-        if (err) return console.error(err.message);
-
         if (row) {
             res.render('verify', { valid: true, certificate: row });
         } else {

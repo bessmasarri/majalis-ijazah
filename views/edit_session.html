@@ -1,0 +1,82 @@
+<%- include('partials/header.html') %>
+
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-emerald-100">
+        <h2 class="text-2xl font-bold text-emerald-800 mb-6 text-center">تعديل المجلس</h2>
+
+        <form action="/api/sessions/update/<%= session.id %>" method="POST" enctype="multipart/form-data"
+            class="space-y-6">
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">عنوان المجلس</label>
+                <input type="text" name="title" required value="<%= session.title %>"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">اسم الشيخ</label>
+                <input type="text" name="sheikh_name" required value="<%= session.sheikh_name %>"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">التاريخ</label>
+                    <input type="date" name="date" required value="<%= session.date %>"
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">وقت البدء</label>
+                    <input type="time" name="start_time" required value="<%= session.start_time %>"
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">وقت الانتهاء</label>
+                    <input type="time" name="end_time" required value="<%= session.end_time %>"
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">وصف</label>
+                <textarea name="description" rows="3"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50"><%= session.description %></textarea>
+            </div>
+
+            <div class="border-t pt-4 border-gray-100">
+                <label class="block text-gray-700 font-bold mb-2">ملف الإجازة (قالب Word)</label>
+
+                <div class="mb-3 text-sm text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                    <p class="font-bold mb-1">تعليمات القالب:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li><a href="/api/template/sample" class="text-blue-600 hover:underline font-bold">⬇️ تحميل
+                                نموذج Word جاهز</a></li>
+                        <li>استخدم <code>{أسم}</code> أو <code>{name}</code> لاسم الطالب.</li>
+                        <li>استخدم <code>{date}</code> للتاريخ.</li>
+                    </ul>
+                </div>
+
+                <% if(session.ijazah_file) { %>
+                    <p class="text-sm text-emerald-600 mb-2">✅ الملف الحالي: <%= session.ijazah_file %>
+                    </p>
+                    <% } %>
+                        <input type="file" name="ijazah_file" accept=".doc,.docx"
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50 text-sm">
+                        <p class="text-xs text-gray-500 mt-1">اتركه فارغاً للإبقاء على الملف الحالي.</p>
+            </div>
+
+            <div class="flex gap-4">
+                <button type="submit"
+                    class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow transition">
+                    حفظ التغييرات
+                </button>
+                <a href="/dashboard"
+                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-lg shadow transition text-center">
+                    إلغاء
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <%- include('partials/footer.html') %>

@@ -18,7 +18,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )`);
 
-            // Sessions table (Updated with user_id)
+            // Sessions table (Updated with ijazah_file)
             db.run(`CREATE TABLE IF NOT EXISTS sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -28,6 +28,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 start_time TEXT NOT NULL,
                 end_time TEXT NOT NULL,
                 description TEXT,
+                ijazah_file TEXT,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )`);
 
@@ -37,7 +38,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 session_id INTEGER NOT NULL,
                 name TEXT NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (session_id) REFERENCES sessions(id)
+                FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
             )`);
 
             // Certificates table
@@ -46,8 +47,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 session_id INTEGER NOT NULL,
                 attendee_id INTEGER NOT NULL,
                 generated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (session_id) REFERENCES sessions(id),
-                FOREIGN KEY (attendee_id) REFERENCES attendees(id)
+                FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
+                FOREIGN KEY (attendee_id) REFERENCES attendees(id) ON DELETE CASCADE
             )`);
         });
     }

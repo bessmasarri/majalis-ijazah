@@ -59,81 +59,117 @@
                         <!-- Admin Actions -->
                         <% if (isOwner) { %>
                             <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
-                                <h3 class="text-lg font-bold text-emerald-800 mb-4">⚙️ أدوات المدير</h3>
+                                <h3 class="text-lg font-bold text-emerald-800 mb-4">⚙️ إصدار الشهادات</h3>
+                                <p class="text-sm text-gray-600 mb-4">سيتم إصدار الشهادات لجميع الحضور (QR + اليدوي)
+                                    وإرسالها بالبريد لمن سجل بريده.</p>
                                 <form action="/api/certificates/generate" method="POST">
                                     <input type="hidden" name="session_id" value="<%= session.id %>">
                                     <button type="submit"
                                         class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl transition shadow flex justify-center items-center gap-2">
-                                        <span>🖨️</span> إصدار شهادات الحضور
+                                        <span>🖨️</span> إصدار وإرسال الشهادات
                                     </button>
                                 </form>
-                                <p class="text-xs text-gray-500 mt-2 text-center">سيتم الحفظ في مجلد السيرفر</p>
                             </div>
                             <% } %>
         </div>
 
-        <!-- Attendees List (Bottom on mobile) -->
+        <!-- Attendees List & Manual Add -->
         <div class="lg:col-span-2 order-2">
-            <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden">
-                <div class="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-emerald-800">قائمة الحضور</h3>
-                    <span class="bg-emerald-200 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">
-                        <%= attendees.length %>
-                    </span>
+
+            <!-- Manual Add Form (Admin Only) -->
+            <% if (isOwner) { %>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 mb-6">
+                    <h3 class="text-lg font-bold text-emerald-800 mb-4 flex items-center gap-2">
+                        <span>➕</span> تسجيل حضور يدوي
+                    </h3>
+                    <form action="/api/attendees/add" method="POST" class="flex flex-col md:flex-row gap-4">
+                        <input type="hidden" name="session_id" value="<%= session.id %>">
+                        <div class="flex-1">
+                            <input type="text" name="name" required placeholder="اسم الطالب"
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50">
+                        </div>
+                        <div class="flex-1">
+                            <input type="email" name="email" placeholder="البريد الإلكتروني (اختياري)"
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50">
+                        </div>
+                        <button type="submit"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded-lg transition shadow">
+                            إضافة
+                        </button>
+                    </form>
                 </div>
+                <% } %>
 
-                <% if (attendees.length===0) { %>
-                    <div class="p-12 text-center text-gray-400">
-                        <p>لا يوجد حضور مسجل حتى الآن.</p>
-                    </div>
-                    <% } else { %>
-                        <!-- Mobile Card View (Visible on small screens) -->
-                        <div class="block md:hidden divide-y divide-gray-100">
-                            <% attendees.forEach(attendee=> { %>
-                                <div class="p-4 flex justify-between items-center">
-                                    <div>
-                                        <p class="font-bold text-gray-800">
-                                            <%= attendee.name %>
-                                        </p>
-                                        <p class="text-xs text-gray-500">
-                                            <%= new Date(attendee.created_at).toLocaleTimeString('ar-EG') %>
-                                        </p>
-                                    </div>
-                                    <span class="text-green-500 text-xl">✓</span>
-                                </div>
-                                <% }) %>
+                    <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden">
+                        <div
+                            class="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-emerald-800">قائمة الحضور</h3>
+                            <span class="bg-emerald-200 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">
+                                <%= attendees.length %>
+                            </span>
                         </div>
 
-                        <!-- Desktop Table View (Hidden on small screens) -->
-                        <div class="hidden md:block overflow-x-auto">
-                            <table class="w-full text-right">
-                                <thead class="bg-gray-50 text-gray-600 text-sm">
-                                    <tr>
-                                        <th class="p-4">الاسم</th>
-                                        <th class="p-4">وقت التسجيل</th>
-                                        <th class="p-4">الحالة</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-50">
+                        <% if (attendees.length===0) { %>
+                            <div class="p-12 text-center text-gray-400">
+                                <p>لا يوجد حضور مسجل حتى الآن.</p>
+                            </div>
+                            <% } else { %>
+                                <!-- Mobile Card View -->
+                                <div class="block md:hidden divide-y divide-gray-100">
                                     <% attendees.forEach(attendee=> { %>
-                                        <tr class="hover:bg-gray-50 transition">
-                                            <td class="p-4 font-semibold text-gray-800">
-                                                <%= attendee.name %>
-                                            </td>
-                                            <td class="p-4 text-sm text-gray-500">
-                                                <%= new Date(attendee.created_at).toLocaleTimeString('ar-EG') %>
-                                            </td>
-                                            <td class="p-4">
-                                                <span
-                                                    class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-bold">مسجل</span>
-                                            </td>
-                                        </tr>
+                                        <div class="p-4 flex flex-col gap-2">
+                                            <div class="flex justify-between items-center">
+                                                <p class="font-bold text-gray-800">
+                                                    <%= attendee.name %>
+                                                </p>
+                                                <span class="text-green-500 text-xl">✓</span>
+                                            </div>
+                                            <div class="flex justify-between text-xs text-gray-500">
+                                                <span>
+                                                    <%= new Date(attendee.created_at).toLocaleTimeString('ar-EG') %>
+                                                </span>
+                                                <span>
+                                                    <%= attendee.email || 'بدون بريد' %>
+                                                </span>
+                                            </div>
+                                        </div>
                                         <% }) %>
-                                </tbody>
-                            </table>
-                        </div>
-                        <% } %>
-            </div>
+                                </div>
+
+                                <!-- Desktop Table View -->
+                                <div class="hidden md:block overflow-x-auto">
+                                    <table class="w-full text-right">
+                                        <thead class="bg-gray-50 text-gray-600 text-sm">
+                                            <tr>
+                                                <th class="p-4">الاسم</th>
+                                                <th class="p-4">البريد الإلكتروني</th>
+                                                <th class="p-4">وقت التسجيل</th>
+                                                <th class="p-4">الحالة</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-50">
+                                            <% attendees.forEach(attendee=> { %>
+                                                <tr class="hover:bg-gray-50 transition">
+                                                    <td class="p-4 font-semibold text-gray-800">
+                                                        <%= attendee.name %>
+                                                    </td>
+                                                    <td class="p-4 text-sm text-gray-600">
+                                                        <%= attendee.email || '-' %>
+                                                    </td>
+                                                    <td class="p-4 text-sm text-gray-500">
+                                                        <%= new Date(attendee.created_at).toLocaleTimeString('ar-EG') %>
+                                                    </td>
+                                                    <td class="p-4">
+                                                        <span
+                                                            class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-bold">مسجل</span>
+                                                    </td>
+                                                </tr>
+                                                <% }) %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <% } %>
+                    </div>
         </div>
     </div>
 

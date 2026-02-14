@@ -21,29 +21,52 @@
 
                 <% sessions.forEach(session=> { %>
                     <div
-                        class="bg-white rounded-xl shadow-md overflow-hidden border border-emerald-100 hover:shadow-lg transition relative">
-                        <div class="p-6">
-                            <h2 class="text-xl font-bold text-emerald-900 mb-2">
+                        class="bg-white rounded-xl shadow-md overflow-hidden border border-emerald-100 hover:shadow-lg transition relative flex flex-col h-full">
+                        <div class="p-6 flex-grow">
+                            <h2 class="text-xl font-bold text-emerald-900 mb-2 truncate">
                                 <%= session.title %>
                             </h2>
-                            <p class="text-gray-600 mb-4"><span class="font-semibold">الشيخ:</span>
+                            <p class="text-gray-600 mb-4 truncate"><span class="font-semibold">الشيخ:</span>
                                 <%= session.sheikh_name %>
                             </p>
 
-                            <div class="flex justify-between text-sm text-gray-500 mb-4">
+                            <div class="flex justify-between text-sm text-gray-500 mb-4 bg-gray-50 p-2 rounded">
                                 <span>📅 <%= session.date %></span>
                                 <span>⏰ <%= session.start_time %></span>
                             </div>
 
                             <div class="flex gap-2">
                                 <a href="/session/<%= session.id %>"
-                                    class="flex-1 bg-amber-100 hover:bg-amber-200 text-amber-900 text-center py-2 rounded-lg transition">
-                                    إدارة المجلس
+                                    class="flex-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-center py-2 rounded-lg transition font-bold text-sm">
+                                    إدارة
                                 </a>
+                                <a href="/session/edit/<%= session.id %>"
+                                    class="bg-amber-100 hover:bg-amber-200 text-amber-900 px-3 py-2 rounded-lg transition"
+                                    title="تعديل">
+                                    ✏️
+                                </a>
+                                <button onclick="confirmDelete('<%= session.id %>')"
+                                    class="bg-red-100 hover:bg-red-200 text-red-900 px-3 py-2 rounded-lg transition"
+                                    title="حذف">
+                                    🗑️
+                                </button>
                             </div>
                         </div>
                     </div>
                     <% }) %>
     </div>
+
+    <!-- Hidden Delete Form -->
+    <form id="deleteForm" method="POST" style="display: none;"></form>
+
+    <script>
+        function confirmDelete(id) {
+            if (confirm('هل أنت متأكد من حذف هذا المجلس؟ سيتم حذف جميع بيانات الحضور والشهادات المرتبطة به.')) {
+                const form = document.getElementById('deleteForm');
+                form.action = '/api/sessions/delete/' + id;
+                form.submit();
+            }
+        }
+    </script>
 
     <%- include('partials/footer.html') %>

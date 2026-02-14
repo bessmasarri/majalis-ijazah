@@ -3,7 +3,7 @@
     <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-emerald-100">
         <h2 class="text-2xl font-bold text-emerald-800 mb-6 text-center">إنشاء مجلس جديد</h2>
 
-        <form action="/api/sessions" method="POST" class="space-y-6">
+        <form action="/api/sessions" method="POST" enctype="multipart/form-data" class="space-y-6">
             <div>
                 <label class="block text-gray-700 font-bold mb-2">عنوان المجلس</label>
                 <input type="text" name="title" required
@@ -42,6 +42,23 @@
                 <label class="block text-gray-700 font-bold mb-2">وصف (اختياري)</label>
                 <textarea name="description" rows="3"
                     class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50"></textarea>
+            </div>
+
+            <div class="border-t pt-4 border-gray-100">
+                <label class="block text-gray-700 font-bold mb-2">ملف الإجازة (قالب Word)</label>
+                <div class="mb-3 text-sm text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                    <p class="font-bold mb-1">كيفية الاستخدام:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>حمل النموذج الجاهز: <a href="/api/template/sample"
+                                class="text-blue-600 hover:underline font-bold">⬇️ تحميل نموذج Word</a></li>
+                        <li>افتح الملف في Word وعدل التصميم كما تشاء.</li>
+                        <li>ضع الكلمة <code>{name}</code> أو <code>{أسم}</code> في المكان الذي تريد أن يظهر فيه اسم
+                            الطالب.</li>
+                        <li>ارفعه هنا ليتم استخدامه في إنشاء الإجازات.</li>
+                    </ul>
+                </div>
+                <input type="file" name="ijazah_file" accept=".doc,.docx"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50 text-sm">
             </div>
 
             <button type="submit"
